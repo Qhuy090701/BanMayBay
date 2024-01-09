@@ -3,81 +3,71 @@ using System.Collections.Generic;
 using UnityEngine.Pool;
 using System;
 
-public class ObjectPool : Singleton<ObjectPool>
-{
-    [System.Serializable]
-    public class Pool
-    {
-        public string tag;
-        public GameObject prefab;
-        public int size;
-    }
+public class ObjectPool : Singleton<ObjectPool> {
+  [System.Serializable]
+  public class Pool {
+    public string tag;
+    public GameObject prefab;
+    public int size;
+  }
 
-    public List<Pool> pools;
-    public Dictionary<string, Queue<GameObject>> poolDictionary;
+  public List<Pool> pools;
+  public Dictionary<string, Queue<GameObject>> poolDictionary;
 
-    void Awake()
-    {
-        poolDictionary = new Dictionary<string, Queue<GameObject>>();
+  void Awake() {
+    poolDictionary = new Dictionary<string, Queue<GameObject>>();
 
-        foreach (Pool pool in pools)
-        {
-            Queue<GameObject> objectPool = new Queue<GameObject>();
+    foreach (Pool pool in pools) {
+      Queue<GameObject> objectPool = new Queue<GameObject>();
 
-            for (int i = 0; i < pool.size; i++)
-            {
-                GameObject obj = Instantiate(pool.prefab);
-                if (obj == null)
-                {
-                    Debug.LogError("sasas");
-                }
-                obj.SetActive(false);
-                objectPool.Enqueue(obj);
-            }
-
-            poolDictionary.Add(pool.tag, objectPool);
-        }
-    }
-
-    public GameObject SpawnFromPool(string tag, Vector3 position, Quaternion rotation)
-    {
-        if (!poolDictionary.ContainsKey(tag))
-        {
-            Debug.LogWarning("Pool with tag " + tag + " doesn't exist.");
-            return null;
+      for (int i = 0; i < pool.size; i++) {
+        GameObject obj = Instantiate(pool.prefab);
+        if (obj == null) {
+          Debug.LogError("sasas");
         }
 
-        GameObject objectToSpawn = poolDictionary[tag].Dequeue();
+        obj.SetActive(false);
+        objectPool.Enqueue(obj);
+      }
 
-        objectToSpawn.SetActive(true);
-        objectToSpawn.transform.position = position;
-        objectToSpawn.transform.rotation = rotation;
-        IPooledObject pooledObject = objectToSpawn.GetComponent<IPooledObject>();
+      poolDictionary.Add(pool.tag, objectPool);
+    }
+  }
 
-        if (pooledObject != null)
-        {
-            pooledObject.OnObjectSpawn();
-        }
-        return objectToSpawn;
+  public GameObject SpawnFromPool(string tag, Vector3 position, Quaternion rotation) {
+    if (!poolDictionary.ContainsKey(tag)) {
+      Debug.LogWarning("Pool with tag " + tag + " doesn't exist.");
+      return null;
     }
 
-    public void ReturnToPool(string tag, GameObject objectToReturn)
-    {
-        if (!poolDictionary.ContainsKey(tag))
-        {
-            Debug.LogWarning("Pool with tag " + tag + " doesn't exist.");
-            objectToReturn.SetActive(false);
-            poolDictionary[tag].Enqueue(objectToReturn);
-            return;
-        }
+    GameObject objectToSpawn = poolDictionary[tag].Dequeue();
 
-        objectToReturn.SetActive(false);
+    objectToSpawn.SetActive(true);
+    objectToSpawn.transform.position = position;
+    objectToSpawn.transform.rotation = rotation;
+    IPooledObject pooledObject = objectToSpawn.GetComponent<IPooledObject>();
 
-        poolDictionary[tag].Enqueue(objectToReturn);
+    if (pooledObject != null) {
+      pooledObject.OnObjectSpawn();
     }
 
-    internal void ReturnToPool(object gameObject)
-    {
-        throw new NotImplementedException();
+    return objectToSpawn;
+  }
+
+  public void ReturnToPool(string tag, GameObject objectToReturn) {
+    if (!poolDictionary.ContainsKey(tag)) {
+      Debug.LogWarning("Pool with tag " + tag + " doesn't exist.");
+      objectToReturn.SetActive(false);
+      poolDictionary[tag].Enqueue(objectToReturn);
+      return;
     }
+
+    objectToReturn.SetActive(false);
+
+    poolDictionary[tag].Enqueue(objectToReturn);
+  }
+
+  internal void ReturnToPool(object gameObject) {
+    throw new NotImplementedException();
+  }
 }
